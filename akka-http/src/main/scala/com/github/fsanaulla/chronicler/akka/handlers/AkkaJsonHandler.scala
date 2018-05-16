@@ -18,9 +18,15 @@ private[fsanaulla] trait AkkaJsonHandler extends JsonHandler[HttpResponse] {
 
   protected implicit val mat: ActorMaterializer
 
-  /**
-    * Custom Unmarshaller for Jawn JSON
-    */
+  import AkkaJsonHandler.unm
+
+  override def getJsBody(response: HttpResponse): Future[JValue] = {
+    Unmarshal(response.entity).to[JValue]
+  }
+}
+
+private[akka] object AkkaJsonHandler {
+  /** Custom Unmarshaller for Jawn JSON */
   implicit val unm: Unmarshaller[HttpEntity, JValue] = {
     Unmarshaller.withMaterializer {
       implicit ex =>
@@ -31,10 +37,4 @@ private[fsanaulla] trait AkkaJsonHandler extends JsonHandler[HttpResponse] {
               .flatMap(db => Future.fromTry(JParser.parseFromString(db.utf8String)))
     }
   }
-
-
-  override def getJsBody(response: HttpResponse): Future[JValue] = {
-    Unmarshal(response.entity).to[JValue]
-  }
-
 }
